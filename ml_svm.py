@@ -5,13 +5,16 @@ class SVM:
     SVM lineal soft-margin OVR con SGD + weight decay + promedio de pesos (Averaged SGD).
     - C controla el castigo por violar el margen.
     - Usa datos estandarizados.
+    - bias_decay regula el weight decay aplicado al sesgo; 0.0 replica el comportamiento
+      anterior y valores pequeños (p.ej. 0.01) estabilizan b.
     Métodos: fit, predict.
     """
-    def __init__(self, lr=0.002, n_iter=150, C=1.0, avg=True):
+    def __init__(self, lr=0.002, n_iter=150, C=1.0, avg=True, bias_decay=0.0):
         self.lr = lr
         self.n_iter = n_iter
         self.C = C
         self.avg = avg
+        self.bias_decay = bias_decay
         self.W = None   # (k, d)
         self.b = None   # (k,)
         self.classes = None
@@ -41,6 +44,8 @@ class SVM:
 
                     # weight decay (L2) SIEMPRE sobre W
                     W[ci] *= (1.0 - self.lr)
+                    # amortiguamos la deriva del sesgo igual que la de W
+                    b[ci] *= (1.0 - self.lr * self.bias_decay)
 
                     if margin < 1.0:
                         # gradiente de la parte hinge
